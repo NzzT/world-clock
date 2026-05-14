@@ -11,6 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
 </head>
 
 <body>
@@ -60,8 +61,37 @@
                 <div class="my-clock-date" id="my-clock-date"></div>
             </div>
         </div>
-    </div>
 
+        <div class="add-clock-bar">
+            <label for="tz-select">Add a city / timezone:</label>
+            <div class="select-wrapper">
+                <select id="tz-select" aria-label="Select city or timezone"></select>
+            </div>
+            <button class="btn-primary" onclick="addClock()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Clock
+            </button>
+        </div>
+
+        <div class="section-title">World Clocks</div>
+        <div class="clocks-grid" id="clocks-grid">
+            <div class="empty-state" id="empty-state">
+                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <ellipse cx="12" cy="12" rx="4" ry="9" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="12" y1="3" x2="12" y2="12" />
+                    <line x1="12" y1="12" x2="16" y2="12" />
+                </svg>
+                <h3>No World Clocks Yet</h3>
+                <p>Pick a city from the dropdown above and click Add Clock to see its local time.</p>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

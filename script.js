@@ -157,3 +157,139 @@ function populateSelect() {
         sel.appendChild(og);
     });
 }
+
+function updateLocalClock() {
+    const t = formatTime(localTz);
+    const d = getTimeInTz(localTz);
+    const timeEl = document.getElementById('my-clock-time');
+    timeEl.textContent = t.main + ':' + t.sec + (t.ampm ? ' ' + t.ampm : '');
+    document.getElementById('my-clock-date').textContent = d.dateStr;
+    const tzName = document.getElementById('my-clock-name');
+    const tzId = document.getElementById('my-clock-tz');
+    if (tzName.textContent === 'Detecting location…') {
+        const known = TIMEZONES.find(t => t.tz === localTz);
+        tzName.textContent = known ? known.city + ', ' + known.country : localTz.replace(/_/g, ' ');
+        tzId.textContent = localTz;
+    }
+}
+
+function renderAllClocks() {
+    updateLocalClock();
+    clocks.forEach(c => {
+        const card = document.getElementById('card-' + c.id);
+        if (!card) return;
+        const t = formatTime(c.tz);
+        card.querySelector('.clock-display').innerHTML =
+            `${t.main}<span class="clock-seconds">:${t.sec}</span>${t.ampm ? '<span class="clock-ampm">' + t.ampm + '</span>' : ''}`;
+        card.querySelector('.clock-date').textContent = getTimeInTz(c.tz).dateStr;
+    });
+}
+
+function addClock() {
+    const sel = document.getElementById('tz-select');
+    const val = sel.value;
+    if (!val) return;
+    const [tz, city, country] = val.split('|');
+    if (clocks.find(c => c.tz === tz && c.city === city)) return;
+
+    const id = nextId++;
+    clocks.push({ id, city, country, tz });
+    document.getElementById('empty-state')?.remove();
+
+    const grid = document.getElementById('clocks-grid');
+    const card = document.createElement('div');
+    card.className = 'clock-card';
+    card.id = 'card-' + id;
+
+    const t = formatTime(tz);
+    const d = getTimeInTz(tz);
+    const offset = getOffsetLabel(tz);
+    const dayDiff = getDayDiff(tz);
+
+    card.innerHTML = `
+    <div class="clock-card-header">
+      <div>
+        <div class="clock-card-country">${country}</div>
+        <div class="clock-card-city">${city}</div>
+        <div class="clock-card-tz">${tz}</div>
+      </div>
+      <button class="remove-btn" onclick="removeClock(${id})" aria-label="Remove ${city} clock">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="clock-display">
+      ${t.main}<span class="clock-seconds">:${t.sec}</span>${t.ampm ? '<span class="clock-ampm">' + t.ampm + '</span>' : ''}
+    </div>
+    <div class="clock-date">
+      ${d.dateStr}${dayDiff ? `<span class="day-diff ${dayDiff.cls}">${dayDiff.label}</span>` : ''}
+    </div>
+    <div class="clock-offset-bar">
+      <span>vs your time</span>
+      <span class="offset-badge">${offset}</span>
+    </div>
+  `;
+    grid.appendChild(card);
+}
+
+function removeClock(id) {
+    clocks = clocks.filter(c => c.id !== id);
+    const card = document.getElementById('card-' + id);
+    if (card) {
+        card.style.transition = 'opacity 200ms, transform 200ms';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            card.remove();
+            if (clocks.length === 0) {
+                const grid = document.getElementById('clocks-grid');
+                grid.innerHTML = `<div class="empty-state" id="empty-state">
+          <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/>
+            <line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="12"/>
+            <line x1="12" y1="12" x2="16" y2="12"/>
+          </svg>
+          <h3>No world clocks yet</h3>
+          <p>Pick a city from the dropdown above and click Add Clock to see its local time.</p>
+        </div>`;
+            }
+        }, 200);
+    }
+}
+
+function setFormat(fmt) {
+    timeFormat = fmt;
+    document.getElementById('fmt-12').classList.toggle('active', fmt === 12);
+    document.getElementById('fmt-24').classList.toggle('active', fmt === 24);
+    document.getElementById('fmt-12').setAttribute('aria-pressed', fmt === 12);
+    document.getElementById('fmt-24').setAttribute('aria-pressed', fmt === 24);
+    renderAllClocks();
+}
+
+(function () {
+    const t = document.querySelector('[data-theme-toggle]'), r = document.documentElement;
+    let d = r.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+    r.setAttribute('data-theme', d);
+    const moonSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    const sunSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+    if (t) {
+        t.innerHTML = d === 'dark' ? moonSvg : sunSvg;
+        t.addEventListener('click', () => {
+            d = d === 'dark' ? 'light' : 'dark';
+            r.setAttribute('data-theme', d);
+            t.innerHTML = d === 'dark' ? moonSvg : sunSvg;
+            t.setAttribute('aria-label', 'Switch to ' + (d === 'dark' ? 'light' : 'dark') + ' mode');
+        });
+    }
+})();
+
+populateSelect();
+updateLocalClock();
+
+const defaults = ['America/New_York|New York|United States', 'Europe/London|London|United Kingdom', 'Asia/Tokyo|Tokyo|Japan', 'Australia/Sydney|Sydney|Australia'];
+defaults.forEach(v => {
+    const sel = document.getElementById('tz-select');
+    sel.value = v;
+    addClock();
+});
+
+setInterval(renderAllClocks, 1000);

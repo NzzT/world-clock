@@ -124,3 +124,15 @@ function getOffsetLabel(tz) {
     return mins > 0 ? `${sign}${diffH > 0 ? '' : '-'
         }${hrs}h ${mins}m vs local` : `${sign}${diffH}h vs local`;
 }
+
+function getDayDiff(tz) {
+    const now = new Date();
+    const localDate = new Date(now.toLocaleString('en-US', { timeZone: localTz }));
+    const tzDate = new Date(now.toLocaleDateString('en-US', { timeZone: tz }));
+    const localDay = new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate()).getTime();
+    const tzDay = new Date(tzDate.getFullYear(), tzDate.getMonth(), tzDate.getDate()).getTime();
+    const diff = (tzDay - localDay) / 86400000;
+    if (diff > 0) return { label: '+1 tomorrow', cls: 'tomorrow' };
+    if (diff < 0) return { label: '-1 yesterday', cls: 'yesterday' };
+    return null;
+}

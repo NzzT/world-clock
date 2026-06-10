@@ -136,3 +136,24 @@ function getDayDiff(tz) {
     if (diff < 0) return { label: '-1 yesterday', cls: 'yesterday' };
     return null;
 }
+
+function populateSelect() {
+    const sel = document.getElementById('tz-select');
+    const grouped = {};
+    TIMEZONES.forEach(t => {
+        if (!grouped[t.country]) grouped[t.country] = [];
+        grouped[t.country].push(t);
+    });
+    const countries = Object.keys(grouped).sort();
+    countries.forEach(country => {
+        const og = document.createElement('optgroup');
+        og.label = country;
+        grouped[country].forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.tz + '|' + t.city + '|' + t.country;
+            opt.textContent = t.city;
+            og.appendChild(opt);
+        });
+        sel.appendChild(og);
+    });
+}

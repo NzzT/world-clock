@@ -88,11 +88,8 @@ const TIMEZONES = [
 ];
 
 let clocks = [];
-
 let timeFormat = 12;
-
 let nextId = 1;
-
 const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 function getTimeInTz(tz) {
@@ -110,25 +107,35 @@ function getTimeInTz(tz) {
     };
 }
 
+function formatTime(tz) {
+    const t = getTimeInTz(tz);
+    let h = t.h, s = String(t.s).padStart(2, '0'), m = String(t.m).padStart(2, '0');
+    if (timeFormat === 12) {
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return { main: `${h}:${m}`, sec: s, ampm };
+    }
+    return { main: `${String(h).padStart(2, '0')}:${m}`, sec: s, ampm: '' };
+}
+
 function getOffsetLabel(tz) {
     const now = new Date();
-    const tzDate = new Date(now.toLocaleString('en-Us', { timeZone: tz }));
+    const tzDate = new Date(now.toLocaleString('en-US', { timeZone: tz }));
     const localDate = new Date(now.toLocaleString('en-US', { timeZone: localTz }));
     const diffMs = tzDate - localDate;
     const diffH = diffMs / 3600000;
-    if (diffH === 0) return 'Same as Local';
+    if (diffH === 0) return 'Same as local';
     const sign = diffH > 0 ? '+' : '';
     const absH = Math.abs(diffH);
     const hrs = Math.floor(absH);
     const mins = Math.round((absH - hrs) * 60);
-    return mins > 0 ? `${sign}${diffH > 0 ? '' : '-'
-        }${hrs}h ${mins}m vs local` : `${sign}${diffH}h vs local`;
+    return mins > 0 ? `${sign}${diffH > 0 ? '' : '-'}${hrs}h ${mins}m vs local` : `${sign}${diffH}h vs local`;
 }
 
 function getDayDiff(tz) {
     const now = new Date();
     const localDate = new Date(now.toLocaleString('en-US', { timeZone: localTz }));
-    const tzDate = new Date(now.toLocaleDateString('en-US', { timeZone: tz }));
+    const tzDate = new Date(now.toLocaleString('en-US', { timeZone: tz }));
     const localDay = new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate()).getTime();
     const tzDay = new Date(tzDate.getFullYear(), tzDate.getMonth(), tzDate.getDate()).getTime();
     const diff = (tzDay - localDay) / 86400000;
